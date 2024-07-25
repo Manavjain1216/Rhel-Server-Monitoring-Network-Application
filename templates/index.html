@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Metrics Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+    /* Global Styles */
+    body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    /* Header Styles */
+    header {
+        background-color: #001f3f; /* Navy Blue */
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    header h1 {
+        margin: 0;
+        font-size: 2em;
+        display: inline-block;
+    }
+    header img {
+        width: 50px;
+        height: 50px;
+        position: absolute;
+        left: 20px;
+    }
+
+    /* Dropdown Styles */
+    .dropdown {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
+    }
+    .dropdown select, .dropdown button {
+        padding: 10px;
+        margin: 10px;
+        font-size: 16px;
+        border: 2px solid #001f3f; /* Navy Blue */
+        border-radius: 2px;
+        background: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .dropdown button {
+        background-color: #001f3f; /* Navy Blue */
+        color: #fff;
+        cursor: pointer;
+        border: none;
+        border-radius: 20px;
+    }
+    .dropdown button:hover {
+        background-color: #003366; /* Darker Navy Blue on hover */
+    }
+    .dropdown select {
+        width: 200px;
+        max-height: 400px; /* Limit height for dropdown box */
+        overflow-y: auto; /* Scrollbar for long lists */
+    }
+
+    /* Table Container */
+    .table-container {
+        padding: 20px;
+        margin: 20px auto;
+        width: 95%;
+        background-color: #fff;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Table Styles */
+    table {
+        width: 100%;
+        border: 2px solid #ddd; /* Increased border width to 2px */
+        border-radius: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-collapse: collapse;
+        margin-bottom: 20px; /* Spacing between table and footer */
+    }
+    th, td {
+        padding: 15px;
+        border: 2px solid #ddd; /* Increased border width to 2px */
+        text-align: center;
+    }
+    th {
+        background-color: #001f3f; /* Navy Blue */
+        color: #fff;
+        text-transform: uppercase;
+    }
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    tr:hover {
+        background-color: #ddd;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        width: 100px;
+        height: 100px;
+        margin: 20px auto;
+    }
+
+    /* Alert Table Styles */
+    .alert-container {
+        margin: 20px auto;
+        width: 95%;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .alert-container p {
+        text-align: center;
+        font-size: 1.2em;
+        color: #666;
+    }
+
+    /* Footer Styles */
+    .footer {
+        text-align: center;
+        padding: 10px 0;
+        background-color: #001f3f; /* Navy Blue */
+        color: #fff;
+        margin-top: auto; /* Push footer to the bottom */
+        width: 100%;
+        box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+</head>
+<body>
+    <header>
+        <img src="iAF.png" alt="Logo">
+        <h1><i class="fas fa-tachometer-alt"></i> System Metrics Dashboard</h1>
+    </header>
+    <div class="dropdown">
+        <select id="locationFilter">
+            <option value="All">All</option>
+            <!-- Add more options dynamically using JavaScript -->
+        </select>
+        <button onclick="filterData()">Go</button>
+    </div>
+    <div class="table-container">
+        <table id="metricsTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Location</th>
+                    <th>IP</th>
+                    <th>Total Disk</th>
+                    <th>Disk Usage</th>
+                    <th>Total Memory</th>
+                    <th>Memory Usage</th>
+                    <th>CPU Usage</th>
+                    <th>Number of CPUs</th>
+                    <th>Firewall Rules</th>
+                    <th>Usage Chart</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here dynamically using JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="alert-container">
+        <table id="alertTable">
+            <thead>
+                <tr>
+                    <th>System IP</th>
+                    <th>Location</th>
+                    <th>Alert Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Alert data will be inserted here dynamically using JavaScript -->
+            </tbody>
+        </table>
+        <p id="noAlertsMessage" style="display: none;">No alerts for the selected location.</p>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2024 System Metrics Dashboard. All rights reserved.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchData();
+        });
+
+        function fetchData() {
+            fetch('/data?location=' + document.getElementById('locationFilter').value)
+                .then(response => response.json())
+                .then(data => {
+                    populateTable(data);
+                    populateFilterOptions(data);
+                    populateAlertTable(data);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function populateTable(data) {
+            const tableBody = document.getElementById('metricsTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+
+            data.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.Timestamp}</td>
+                    <td>${row.Location}</td>
+                    <td>${row.IP}</td>
+                    <td>${row['Total Disk']}</td>
+                    <td>${row['Disk Usage']}</td>
+                    <td>${row['Total Memory']}</td>
+                    <td>${row['Memory Usage']}</td>
+                    <td>${row['CPU Usage']}</td>
+                    <td>${row['Number of CPUs']}</td>
+                    <td>${row['Firewall Rules']}</td>
+                    <td class="chart-container"><canvas id="chart-${index}"></canvas></td>
+                `;
+                tableBody.appendChild(tr);
+
+                renderChart(`chart-${index}`, parseFloat(row['Disk Usage'].replace('%', '')), parseFloat(row['Memory Usage'].replace('%', '')), parseFloat(row['CPU Usage'].replace('%', '')));
+            });
+        }
+
+        function renderChart(chartId, diskUsage, memoryUsage, cpuUsage) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Disk', 'Memory', 'CPU'],
+                    datasets: [{
+                        data: [diskUsage, memoryUsage, cpuUsage],
+                        backgroundColor: [
+                            getColor(diskUsage),
+                            getColor(memoryUsage),
+                            getColor(cpuUsage)
+                        ]
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function getColor(value) {
+            if (value > 90) return 'red';
+            if (value > 70) return 'orange';
+            if (value > 50) return 'yellow';
+            return 'green';
+        }
+
+        function populateFilterOptions(data) {
+            const locationFilter = document.getElementById('locationFilter');
+            const locations = [...new Set(data.map(item => item.Location))];
+            locationFilter.innerHTML = '<option value="All">All</option>';
+            locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationFilter.appendChild(option);
+            });
+        }
+
+        function filterData() {
+            fetchData();
+        }
+
+        function populateAlertTable(data) {
+            const alertTableBody = document.getElementById('alertTable').getElementsByTagName('tbody')[0];
+            const noAlertsMessage = document.getElementById('noAlertsMessage');
+            alertTableBody.innerHTML = '';
+            noAlertsMessage.style.display = 'none';
+
+            let alerts = [];
+            data.forEach(row => {
+                const diskUsage = parseFloat(row['Disk Usage'].replace('%', ''));
+                const memoryUsage = parseFloat(row['Memory Usage'].replace('%', ''));
+                const cpuUsage = parseFloat(row['CPU Usage'].replace('%', ''));
+
+                if (diskUsage > 90) {
+                    alerts.push({ IP: row.IP, Location: row.Location, Type: 'Disk Usage Alert' });
+                }
+                if (memoryUsage > 90) {
+                    alerts.push({ IP: row.IP, Location: row.Location, Type: 'Memory Usage Alert' });
+                }
+                if (cpuUsage > 90) {
+                    alerts.push({ IP: row.IP, Location: row.Location, Type: 'CPU Usage Alert' });
+                }
+            });
+
+            if (alerts.length === 0) {
+                noAlertsMessage.style.display = 'block';
+            } else {
+                alerts.forEach(alert => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${alert.IP}</td><td>${alert.Location}</td><td>${alert.Type}</td>`;
+                    alertTableBody.appendChild(tr);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+
